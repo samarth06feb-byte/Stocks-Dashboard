@@ -50,7 +50,7 @@ if ticker_symbol:
         st.subheader(f"Latest News for {ticker_symbol}")
         news = ticker.news
         for item in news[:5]: # Show top 5 news stories
-            st.write(f"**{item['title']}**")
+            
             st.caption(f"Source: {item['publisher']}")
             st.write(f"[Read Article]({item['link']})")
             st.divider()
