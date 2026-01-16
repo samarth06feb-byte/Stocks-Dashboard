@@ -5,7 +5,7 @@ import pandas as pd
 # Set page to wide mode for a more professional look
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
 
-st.title("🏛️ Hermes & Jackson: Wealth Research Terminal")
+st.title("Stock Research Terminal")
 
 # SIDEBAR: For user inputs and global settings
 with st.sidebar:
@@ -13,7 +13,7 @@ with st.sidebar:
     ticker_symbol = st.text_input("Enter Ticker", "F").upper()
     period = st.selectbox("Chart Period", ["1mo", "6mo", "1y", "5y", "max"], index=2)
     st.divider()
-    st.info("Founder: Sam Hermes")
+    
 
 # FETCH DATA
 if ticker_symbol:
