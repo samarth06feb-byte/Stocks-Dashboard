@@ -21,7 +21,7 @@ if ticker_symbol:
     info = ticker.info
     
     # MAIN TABS: Organize your research
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "📈 Financials", "📰 News", "⚙️ Analysis"])
+    tab1, tab2, tab3, tab4 = st.tabs([" Overview", " Financials", " News", " Analysis"])
 
     # TAB 1: OVERVIEW
     with tab1:
