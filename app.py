@@ -45,15 +45,19 @@ if ticker_symbol:
         st.subheader("Balance Sheet")
         st.dataframe(ticker.balance_sheet)
 
-    # TAB 3: NEWS (Stay updated on brands)
+   # TAB 3: NEWS (Updated to prevent KeyError)
     with tab3:
         st.subheader(f"Latest News for {ticker_symbol}")
         news = ticker.news
-        for item in news[:5]: # Show top 5 news stories
-            
-            st.caption(f"Source: {item['publisher']}")
-            st.write(f"[Read Article]({item['link']})")
-            st.divider()
+        if news:
+            for item in news[:5]:
+                st.write(f"**{item.get('title', 'No Title')}**")
+                # Using .get ensures if 'publisher' is missing, it won't crash
+                st.caption(f"Source: {item.get('publisher', 'Unknown Source')}")
+                st.write(f"[Read Article]({item.get('link', '#')})")
+                st.divider()
+        else:
+            st.write("No recent news found for this ticker.")
 
     # TAB 4: ANALYSIS (Peter Lynch Style Categorization)
     with tab4:
