@@ -137,14 +137,4 @@ if len(tickers) > 0:
             st.error(f"Please ensure tickers are correct. Error: {e}")
         
        
-        # 1. This 'if' must be indented under the 'try' or 'if ticker:' block
-        if avg_vol > 30:
-            st.error("⚠️ HIGH VOLATILITY: This fund moves significantly. Ideal for 'Fast Grower' strategies.")
-            
-        # 2. 'elif' must be perfectly aligned with 'if'
-        elif avg_vol > 15:
-            st.warning("⚖️ MODERATE VOLATILITY: Typical for 'Stalwarts' and 'Cyclicals'.")
-            
-        # 3. 'else' must be perfectly aligned with 'if'
-        else:
-            st.success("🛡️ LOW VOLATILITY: Stable wealth preservation. 'Slow Grower' category.")
+       
