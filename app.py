@@ -74,7 +74,7 @@ if ticker_symbol:
             st.warning("Category: Fast Grower")
         else:
             st.info("Category: Monitor for Turnaround or Cyclicality")
-# TAB 5: VOLATILITY & RISK ANALYSIS
+    # TAB 5: VOLATILITY & RISK ANALYSIS
     import streamlit as st
 import yfinance as yf
 import pandas as pd
