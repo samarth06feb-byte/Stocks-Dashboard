@@ -134,7 +134,7 @@ if len(tickers) > 0:
             st.success("Risk Level: LOW (Conservative/Slow Growers)")
 
     except Exception as e:
-        st.error(f"Please ensure tickers are correct. Error: {e}")
+            st.error(f"Please ensure tickers are correct. Error: {e}")
         
             st.error("⚠️ HIGH VOLATILITY: This fund moves significantly. Ideal for 'Fast Grower' strategies but requires a strong stomach.")
         elif ann_vol < 0.12:
