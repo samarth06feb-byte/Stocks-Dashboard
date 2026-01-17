@@ -136,7 +136,8 @@ if len(tickers) > 0:
     except Exception as e:
             st.error(f"Please ensure tickers are correct. Error: {e}")
         
-       # 1. This 'if' must be indented under the 'try' or 'if ticker:' block
+       
+        # 1. This 'if' must be indented under the 'try' or 'if ticker:' block
         if avg_vol > 30:
             st.error("⚠️ HIGH VOLATILITY: This fund moves significantly. Ideal for 'Fast Grower' strategies.")
             
