@@ -136,8 +136,10 @@ if len(tickers) > 0:
     except Exception as e:
             st.error(f"Please ensure tickers are correct. Error: {e}")
         
-            st.error("⚠️ HIGH VOLATILITY: This fund moves significantly. Ideal for 'Fast Grower' strategies but requires a strong stomach.")
-        elif ann_vol < 0.12:
-            st.success("✅ LOW VOLATILITY: This fund is stable. Likely a 'Stalwart' or 'Slow Grower' suitable for wealth preservation.")
+        # Ensure 'if', 'elif', and 'else' are all vertically aligned!
+        if avg_vol > 30:
+            st.error("⚠️ HIGH VOLATILITY: This fund moves significantly. Ideal for 'Fast Grower' strategies.")
+        elif avg_vol > 15:
+            st.warning("⚖️ MODERATE VOLATILITY: Typical for 'Stalwarts' and 'Cyclicals'.")
         else:
-            st.info("ℹ️ MODERATE VOLATILITY: Standard market movement. Typical for diversified mutual funds.")
+            st.success("🛡️ LOW VOLATILITY: Stable wealth preservation. 'Slow Grower' category.")
