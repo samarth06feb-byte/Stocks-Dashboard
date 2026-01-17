@@ -74,3 +74,70 @@ if ticker_symbol:
             st.warning("Category: Fast Grower")
         else:
             st.info("Category: Monitor for Turnaround or Cyclicality")
+# TAB 5: VOLATILITY & RISK ANALYSIS
+    import streamlit as st
+import yfinance as yf
+import pandas as pd
+import numpy as np
+
+st.set_page_config(layout="wide", page_title="H&J Portfolio Risk Terminal")
+
+st.title("Portfolio Risk Analyzer")
+
+# SIDEBAR for 15 Tickers
+with st.sidebar:
+    st.header("Your 15 Stocks")
+    # Default list including your interests (Defense, Auto, Food)
+    default_tickers = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, GOOG, TSLA, AMZN, NVDA, META, BRK-B, V, JPM"
+    input_tickers = st.text_area("Enter 15 Tickers (comma separated):", default_tickers)
+    tickers = [t.strip().upper() for t in input_tickers.split(",")]
+    
+    st.divider()
+    st.info("Analyzing Annualized Volatility & Risk")
+
+if len(tickers) > 0:
+    try:
+        # 1. DOWNLOAD DATA
+        data = yf.download(tickers, period="1y")['Close']
+        
+        # 2. CALCULATE DAILY RETURNS
+        returns = data.pct_change().dropna()
+        
+        # 3. CALCULATE VOLATILITY (Standard Deviation)
+        # Annualized Volatility = Daily SD * Square Root of 252 trading days
+        volatility = returns.std() * np.sqrt(252) * 100
+        
+        # 4. DISPLAY RESULTS
+        st.subheader("Portfolio Volatility Overview (Annualized)")
+        
+        # Create a clean table for the 15 stocks
+        vol_df = pd.DataFrame(volatility, columns=["Volatility (%)"]).sort_values(by="Volatility (%)", ascending=False)
+        
+        col1, col2 = st.columns([1, 2])
+        
+        with col1:
+            st.dataframe(vol_df.style.format("{:.2f}%"))
+            
+        with col2:
+            st.bar_chart(vol_df)
+
+        # 5. RISK SUMMARY
+        st.divider()
+        avg_vol = volatility.mean()
+        st.subheader(f"Average Portfolio Volatility: {avg_vol:.2f}%")
+        
+        if avg_vol > 30:
+            st.error("Risk Level: HIGH (Aggressive Growth/Fast Growers)")
+        elif avg_vol > 15:
+            st.warning("Risk Level: MODERATE (Stalwarts & Cyclicals)")
+        else:
+            st.success("Risk Level: LOW (Conservative/Slow Growers)")
+
+    except Exception as e:
+        st.error(f"Please ensure tickers are correct. Error: {e}")
+        
+            st.error("⚠️ HIGH VOLATILITY: This fund moves significantly. Ideal for 'Fast Grower' strategies but requires a strong stomach.")
+        elif ann_vol < 0.12:
+            st.success("✅ LOW VOLATILITY: This fund is stable. Likely a 'Stalwart' or 'Slow Grower' suitable for wealth preservation.")
+        else:
+            st.info("ℹ️ MODERATE VOLATILITY: Standard market movement. Typical for diversified mutual funds.")
