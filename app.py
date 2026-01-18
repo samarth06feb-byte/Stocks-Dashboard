@@ -57,7 +57,7 @@ if ticker_symbol:
 # --- TAB 1: OVERVIEW ---
 if ticker_symbol:
     ticker = yf.Ticker(ticker_symbol)
-    info = ticker.info
+    info = ticker.fast_info
     
     with tab1:
         col1, col2 = st.columns([1, 2])
