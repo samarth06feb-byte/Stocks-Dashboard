@@ -1,5 +1,14 @@
-import streamlit as st
 import yfinance as yf
+import streamlit as st
+# You may need to add 'requests' and 'requests_cache' to requirements.txt
+import requests_cache 
+
+# Create a session that caches data for 1 hour to reduce requests
+session = requests_cache.CachedSession('hermes_cache', expire_after=3600)
+session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/115.0.0.0 Safari/537.36'})
+
+# Then, when you call yf.Ticker, pass the session:
+ticker = yf.Ticker(ticker_symbol, session=session)
 import pandas as pd
 import numpy as np
 
