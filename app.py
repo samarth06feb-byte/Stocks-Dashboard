@@ -3,22 +3,7 @@ import yfinance as yf
 import requests_cache
 
 
-# 1. SIDEBAR (Define 'ticker_symbol' here)
-with st.sidebar:
-    st.header("Settings")
-    ticker_symbol = st.text_input("Enter Ticker", "F").upper()
 
-# 2. DATA FETCHING (Now 'ticker_symbol' and 'session' both exist)
-if ticker_symbol:
-    # --- CHANGE THIS ---
-# ticker = yf.Ticker(ticker_symbol, session=session)
-
-# --- TO THIS ---
-ticker = yf.Ticker(ticker_symbol)
-# REPLACE WITH THIS:
-if ticker_symbol:
-    ticker = yf.Ticker(ticker_symbol) # Let yfinance handle the session automatically
-    info = ticker.info
 
 # 1. Page Config (Only once at the top)
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
