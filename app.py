@@ -76,7 +76,7 @@ if ticker_symbol:
             st.info("Category: Monitor for Turnaround or Cyclicality")
             
     # TAB 5: VOLATILITY For Portfolio
-    with tab5
+    with tab5:
     import streamlit as st
 import yfinance as yf
 import pandas as pd
