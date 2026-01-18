@@ -2,3 +2,4 @@ streamlit
 yfinance>=1.0.0
 pandas
 numpy
+alpha_vantage>=3.0.0
