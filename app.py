@@ -7,16 +7,18 @@ import numpy as np
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
 st.title("Stocks Research Terminal")
 
-# 2. CACHED DATA FETCHING (The "Security Layer")
+# 2. CACHED DATA FETCHING
+# Use cache_resource for the 'Ticker' object (the tool)
+@st.cache_resource(ttl=3600)
+def get_ticker_object(symbol):
+    return yf.Ticker(symbol)
+
+# Use cache_data for the actual information (the numbers)
 @st.cache_data(ttl=3600)
-def get_stock_data(symbol):
-    try:
-        ticker = yf.Ticker(symbol)
-        # We fetch both the heavy info AND the fast_info to be safe
-        # Fast_info is less likely to trigger rate limits
-        return ticker, ticker.info, ticker.fast_info
-    except Exception:
-        return None, None, None
+def get_stock_stats(symbol):
+    ticker = yf.Ticker(symbol)
+    # Return serializable data (dictionaries and basic info)
+    return ticker.info, ticker.fast_info
 
 # 3. SIDEBAR
 with st.sidebar:
@@ -35,10 +37,21 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "News", "Analy
 
 # 5. EXECUTION BLOCK
 if ticker_symbol:
-    ticker, info, fast_info = get_stock_data(ticker_symbol)
+    # 1. Get the 'Tool' (Ticker Object)
+    ticker = get_ticker_object(ticker_symbol)
     
-    # Check if we got data back
-    if ticker and info and 'longName' in info:
+    # 2. Get the 'Data' (Info Dictionaries)
+    info, fast_info = get_stock_stats(ticker_symbol)
+    
+    if info and 'longName' in info:
+        with tab1:
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                st.header(info.get('longName', ticker_symbol))
+                # Using fast_info for price stats as a reliable backup
+                price = info.get('currentPrice') or fast_info.get('last_price', 'N/A')
+                st.metric("Current Price", f"${price}")
+                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
         
         # --- TAB 1: OVERVIEW ---
         with tab1:
