@@ -5,11 +5,11 @@ import numpy as np
 
 # 1. Page Config (Only once at the top)
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
-st.title("🏛️ Hermes & Jackson: Wealth Research Terminal")
+st.title("Stocks Research Terminal")
 
 # 2. Combined Sidebar
 with st.sidebar:
-    st.header("Search & Portfolio Settings")
+    st.header("Search & Portfolio Risk Settings")
     # Single Ticker Research
     ticker_symbol = st.text_input("Enter Ticker for Research", "F").upper()
     period = st.selectbox("Chart Period", ["1mo", "6mo", "1y", "5y", "max"], index=2)
@@ -17,16 +17,16 @@ with st.sidebar:
     st.divider()
     
     # Portfolio Analysis (15 Stocks)
-    st.subheader("Your 15 Stock Portfolio")
+    st.subheader("MAX 15 Stocks")
     default_tickers = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, GOOG, TSLA, AMZN, NVDA, META, BRK-B, V, JPM"
     input_tickers = st.text_area("Portfolio Tickers (comma separated):", default_tickers)
     tickers = [t.strip().upper() for t in input_tickers.split(",")]
     
     st.divider()
-    st.info("Sophisticated Analysis by Sam Hermes")
+   
 
 # 3. Define the Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "📈 Financials", "📰 News", "⚙️ Analysis", "📉 Volatility"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs([" Overview", " Financials", " News", " Analysis", " Volatility"])
 
 # --- TAB 1: OVERVIEW ---
 if ticker_symbol:
@@ -46,11 +46,27 @@ if ticker_symbol:
 
     # --- TAB 2: FINANCIALS ---
     with tab2:
-        st.subheader("Annual Income Statement")
-        st.dataframe(ticker.income_stmt)
-        st.subheader("Balance Sheet")
-        st.dataframe(ticker.balance_sheet)
+        st.header("Financial Statements")
+        st.info("Note: Numbers are in actual units. Use the scrollbar to see all years.")
 
+        # Function to format numbers with commas
+        def format_financials(df):
+            return df[::-1].style.format("{:,.0f}")
+
+        # 1. Income Statement
+        st.subheader("Income Statement (Top Line to Bottom Line)")
+        if not ticker.income_stmt.empty:
+            st.dataframe(format_financials(ticker.income_stmt), use_container_width=True)
+        
+        # 2. Balance Sheet
+        st.subheader("Balance Sheet (Assets & Liabilities)")
+        if not ticker.balance_sheet.empty:
+            st.dataframe(format_financials(ticker.balance_sheet), use_container_width=True)
+
+        # 3. CASH FLOW STATEMENT (New Addition)
+        st.subheader("Cash Flow Statement (The Real Money)")
+        if not ticker.cash_flow.empty:
+            st.dataframe(format_financials(ticker.cash_flow), use_container_width=True)
     # --- TAB 3: NEWS ---
     with tab3:
         st.subheader(f"Latest News for {ticker_symbol}")
