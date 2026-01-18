@@ -10,12 +10,11 @@ with st.sidebar:
 
 # 2. DATA FETCHING (Now 'ticker_symbol' and 'session' both exist)
 if ticker_symbol:
-    ticker = yf.Ticker(ticker_symbol, session=session)
-    info = ticker.info # This will now work without NameError!
-  # REMOVE THESE LINES:
-# session = requests_cache.CachedSession('hermes_cache', expire_after=3600)
+    # --- CHANGE THIS ---
 # ticker = yf.Ticker(ticker_symbol, session=session)
 
+# --- TO THIS ---
+ticker = yf.Ticker(ticker_symbol)
 # REPLACE WITH THIS:
 if ticker_symbol:
     ticker = yf.Ticker(ticker_symbol) # Let yfinance handle the session automatically
