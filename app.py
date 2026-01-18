@@ -14,8 +14,14 @@ with st.sidebar:
 if ticker_symbol:
     ticker = yf.Ticker(ticker_symbol, session=session)
     info = ticker.info # This will now work without NameError!
-    
-    # ... rest of your tabs and analysis code
+  # REMOVE THESE LINES:
+# session = requests_cache.CachedSession('hermes_cache', expire_after=3600)
+# ticker = yf.Ticker(ticker_symbol, session=session)
+
+# REPLACE WITH THIS:
+if ticker_symbol:
+    ticker = yf.Ticker(ticker_symbol) # Let yfinance handle the session automatically
+    info = ticker.info
 
 # 1. Page Config (Only once at the top)
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
