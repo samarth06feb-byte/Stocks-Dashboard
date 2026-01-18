@@ -2,15 +2,13 @@ import streamlit as st
 import yfinance as yf
 import requests_cache
 
-# 1. SETUP CACHE & SESSION (Define 'session' first)
-session = requests_cache.CachedSession('hermes_cache', expire_after=3600)
 
-# 2. SIDEBAR (Define 'ticker_symbol' here)
+# 1. SIDEBAR (Define 'ticker_symbol' here)
 with st.sidebar:
     st.header("Settings")
     ticker_symbol = st.text_input("Enter Ticker", "F").upper()
 
-# 3. DATA FETCHING (Now 'ticker_symbol' and 'session' both exist)
+# 2. DATA FETCHING (Now 'ticker_symbol' and 'session' both exist)
 if ticker_symbol:
     ticker = yf.Ticker(ticker_symbol, session=session)
     info = ticker.info # This will now work without NameError!
