@@ -1,16 +1,21 @@
-import yfinance as yf
 import streamlit as st
-# You may need to add 'requests' and 'requests_cache' to requirements.txt
-import requests_cache 
+import yfinance as yf
+import requests_cache
 
-# Create a session that caches data for 1 hour to reduce requests
+# 1. SETUP CACHE & SESSION (Define 'session' first)
 session = requests_cache.CachedSession('hermes_cache', expire_after=3600)
-session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/115.0.0.0 Safari/537.36'})
 
-# Then, when you call yf.Ticker, pass the session:
-ticker = yf.Ticker(ticker_symbol, session=session)
-import pandas as pd
-import numpy as np
+# 2. SIDEBAR (Define 'ticker_symbol' here)
+with st.sidebar:
+    st.header("Settings")
+    ticker_symbol = st.text_input("Enter Ticker", "F").upper()
+
+# 3. DATA FETCHING (Now 'ticker_symbol' and 'session' both exist)
+if ticker_symbol:
+    ticker = yf.Ticker(ticker_symbol, session=session)
+    info = ticker.info # This will now work without NameError!
+    
+    # ... rest of your tabs and analysis code
 
 # 1. Page Config (Only once at the top)
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
