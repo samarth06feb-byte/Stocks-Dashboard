@@ -78,17 +78,17 @@ if ticker_symbol:
     # TAB 5: VOLATILITY For Portfolio
     with tab5:
     import streamlit as st
-import yfinance as yf
-import pandas as pd
-import numpy as np
+    import yfinance as yf
+    import pandas as pd
+    import numpy as np
 
-st.set_page_config(layout="wide", page_title="H&J Portfolio Risk Terminal")
+st.set_page_config(layout="wide", page_title="H&J Terminal")
 
 st.title("Portfolio Risk Analyzer")
 
 # SIDEBAR for 15 Tickers
 with st.sidebar:
-    st.header("Your 15 Stocks")
+    st.header("MAX 15 Stocks")
     # Default list including your interests (Defense, Auto, Food)
     default_tickers = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, GOOG, TSLA, AMZN, NVDA, META, BRK-B, V, JPM"
     input_tickers = st.text_area("Enter 15 Tickers (comma separated):", default_tickers)
