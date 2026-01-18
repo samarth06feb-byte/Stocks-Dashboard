@@ -2,122 +2,113 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from alpha_vantage.timeseries import TimeSeries
 
 # 1. Page Config
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
 st.title("🏛️ Hermes & Jackson | Research Terminal")
 
-# 2. CACHING STRATEGY
-# Use cache_resource for the 'Ticker' object (it's a tool/resource)
-@st.cache_resource(ttl=3600)
-def get_ticker(symbol):
-    return yf.Ticker(symbol)
-
-# Use cache_data for the actual numbers (it's data)
+# 2. DATA ENGINES (Cached)
 @st.cache_data(ttl=3600)
-def get_stock_stats(symbol):
-    t = yf.Ticker(symbol)
-    # We only return dictionaries/dataframes, NOT the 't' object itself
-    # This prevents the UnserializableReturnValueError
-    return t.info, t.fast_info
+def get_yahoo_data(symbol):
+    try:
+        t = yf.Ticker(symbol)
+        # We fetch info only once and return it as a dict
+        return t.info
+    except:
+        return None
+
+@st.cache_data(ttl=3600)
+def get_backup_price(symbol):
+    """Emergency Engine: Alpha Vantage Price"""
+    try:
+        api_key = st.secrets["AV_API_KEY"]
+        ts = TimeSeries(key=api_key, output_format='pandas')
+        data, _ = ts.get_quote_endpoint(symbol=symbol)
+        return float(data['05. price'].iloc[0])
+    except:
+        return None
 
 # 3. SIDEBAR
 with st.sidebar:
     st.header("Terminal Settings")
     ticker_symbol = st.text_input("Enter Ticker", "F").upper()
     period = st.selectbox("Chart Period", ["1mo", "6mo", "1y", "5y", "max"], index=2)
-    
     st.divider()
-    st.subheader("Portfolio Monitoring")
-    # Your core brands and watchlist
-    default_tickers = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, GOOG, TSLA, NVDA"
-    input_tickers = st.text_area("Portfolio Tickers:", default_tickers)
+    st.subheader("Portfolio Watchlist")
+    default_list = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, TSLA"
+    input_tickers = st.text_area("Portfolio Tickers:", default_list)
     tickers_list = [t.strip().upper() for t in input_tickers.split(",") if t.strip()]
 
-# 4. DEFINE TABS EARLY (Prevents NameError)
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "News", "Analysis", "Volatility"])
+# 4. TABS
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "News", "Lynch Analysis", "Risk"])
 
-# 5. DATA EXECUTION
+# 5. EXECUTION
 if ticker_symbol:
-    try:
-        # Fetch data using our split-caching method
-        ticker_obj = get_ticker(ticker_symbol)
-        info, fast_info = get_stock_stats(ticker_symbol)
-        
+    # Get the "Tool" (The Ticker object itself isn't cached to avoid serialization errors)
+    ticker_obj = yf.Ticker(ticker_symbol)
+    info = get_yahoo_data(ticker_symbol)
+    
+    # Logic: Try Yahoo price first, then Alpha Vantage
+    price = info.get('currentPrice') if info else None
+    if price is None:
+        price = get_backup_price(ticker_symbol)
+
+    if price:
         # --- TAB 1: OVERVIEW ---
         with tab1:
             col1, col2 = st.columns([1, 2])
             with col1:
-                st.header(info.get('longName', ticker_symbol))
-                # Fallback logic for price data
-                price = info.get('currentPrice') or fast_info.get('last_price', 'N/A')
-                st.metric("Current Price", f"${price}")
-                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-                st.write(f"**Summary:** {info.get('longBusinessSummary', 'No summary available.')[:300]}...")
+                st.header(info.get('longName', ticker_symbol) if info else ticker_symbol)
+                st.metric("Current Price", f"${price:.2f}")
+                if info:
+                    st.write(f"**Sector:** {info.get('sector', 'N/A')}")
+                    st.write(f"**Market Cap:** ${info.get('marketCap', 0):,}")
+                else:
+                    st.warning("Yahoo is throttled. Showing live price from Alpha Vantage.")
             with col2:
-                history = ticker_obj.history(period=period)
-                st.line_chart(history['Close'])
+                # Historical Chart (Always try Yahoo first for charts)
+                try:
+                    hist = ticker_obj.history(period=period)
+                    st.line_chart(hist['Close'])
+                except:
+                    st.error("Chart data currently unavailable.")
 
         # --- TAB 2: FINANCIALS ---
         with tab2:
             st.header("Financial Statements")
-            def format_df(df):
-                return df.style.format("{:,.0f}")
+            # Commas formatting
+            fmt = lambda x: "{:,.0f}".format(x) if isinstance(x, (int, float)) else x
             
-            if not ticker_obj.income_stmt.empty:
+            try:
                 st.subheader("Income Statement")
-                st.dataframe(format_df(ticker_obj.income_stmt), use_container_width=True)
-            
-            if not ticker_obj.balance_sheet.empty:
-                st.subheader("Balance Sheet")
-                st.dataframe(format_df(ticker_obj.balance_sheet), use_container_width=True)
+                st.dataframe(ticker_obj.income_stmt.style.format(fmt), use_container_width=True)
+                st.subheader("Cash Flow")
+                st.dataframe(ticker_obj.cash_flow.style.format(fmt), use_container_width=True)
+            except:
+                st.error("Financial statements are throttled by Yahoo. Please wait.")
 
-        # --- TAB 3: NEWS ---
-        with tab3:
-            st.subheader(f"Latest Intelligence: {ticker_symbol}")
-            news_items = ticker_obj.news
-            if news_items:
-                for item in news_items[:5]:
-                    st.write(f"**{item.get('title')}**")
-                    st.caption(f"Source: {item.get('publisher')}")
-                    st.write(f"[Read Article]({item.get('link')})")
-                    st.divider()
-
-        # --- TAB 4: ANALYSIS (Peter Lynch Style) ---
+        # --- TAB 4: LYNCH ANALYSIS ---
         with tab4:
             st.subheader("Asset Categorization")
-            pe = info.get('forwardPE', 0)
-            growth = info.get('earningsGrowth', 0)
-            
-            # Logic tailored to your investment goals
-            if pe and 0 < pe < 15:
-                st.success("Analysis: STALWART / VALUE")
-                st.write("This asset shows a low P/E multiple relative to market averages.")
-            elif growth and growth > 0.20:
-                st.warning("Analysis: FAST GROWER")
-                st.write("Earnings growth exceeds 20%. Typical of high-octane growth stocks.")
-            elif info.get('debtToEquity', 100) > 200:
-                st.error("Analysis: POTENTIAL TURNAROUND")
-                st.write("High debt-to-equity ratio detected. Monitor solvency closely.")
+            if info:
+                pe = info.get('forwardPE', 0)
+                growth = info.get('earningsGrowth', 0)
+                if 0 < pe < 15: st.success("Category: STALWART")
+                elif growth and growth > 0.20: st.warning("Category: FAST GROWER")
+                else: st.info("Category: MONITOR")
             else:
-                st.info("Analysis: CYCLICAL / SLOW GROWER")
+                st.write("Analysis unavailable during throttling.")
 
-    except Exception as e:
-        st.error(f"Yahoo Data Unavailable: The server is currently being throttled.")
-        st.info("This is common on shared hosting. Please wait 5-10 minutes.")
+    else:
+        st.error("Data connection failed. Check your API key in Secrets.")
 
-# --- TAB 5: VOLATILITY (PORTFOLIO) ---
+# --- TAB 5: RISK ---
 with tab5:
-    st.header("Portfolio Risk Profile")
     if tickers_list:
         try:
-            # We download this separately so it doesn't block the main search
-            port_data = yf.download(tickers_list, period="1y")['Close']
-            port_returns = port_data.pct_change().dropna()
-            vol = port_returns.std() * np.sqrt(252) * 100
-            
-            vol_df = pd.DataFrame(vol, columns=["Volatility (%)"]).sort_values(by="Volatility (%)", ascending=False)
-            st.bar_chart(vol_df)
-            st.write(f"**Average Portfolio Risk:** {vol.mean():.2f}% Volatility")
+            data = yf.download(tickers_list, period="1y")['Close']
+            vol = data.pct_change().std() * np.sqrt(252) * 100
+            st.bar_chart(vol)
         except:
-            st.warning("Could not load portfolio volatility. Try reducing the number of tickers.")
+            st.warning("Bulk data throttled.")
