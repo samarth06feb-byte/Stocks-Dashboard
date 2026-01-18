@@ -77,10 +77,10 @@ if ticker_symbol:
             
     # TAB 5: VOLATILITY For Portfolio
     with tab5:
-    import streamlit as st
-    import yfinance as yf
-    import pandas as pd
-    import numpy as np
+        import streamlit as st
+        import yfinance as yf
+        import pandas as pd
+        import numpy as np
 
 st.set_page_config(layout="wide", page_title="H&J Terminal")
 
