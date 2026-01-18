@@ -1,34 +1,58 @@
 import streamlit as st
 import yfinance as yf
-import requests_cache
+import pandas as pd
+import numpy as np
 
-
-
-
-# 1. Page Config (Only once at the top)
+# 1. Page Config
 st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
-st.title("Stocks Research Terminal")
 
-# 2. Combined Sidebar
+# 2. CACHED DATA FETCHING (Prevents Rate Limits)
+@st.cache_data(ttl=3600) # Cache data for 1 hour
+def get_stock_data(symbol):
+    try:
+        ticker = yf.Ticker(symbol)
+        # Fetching info is the heaviest call, so we cache the result
+        return ticker, ticker.info
+    except Exception as e:
+        return None, None
+
+# 3. SIDEBAR
 with st.sidebar:
-    st.header("Search & Portfolio Risk Settings")
-    # Single Ticker Research
+    st.header("Hermes & Jackson Settings")
     ticker_symbol = st.text_input("Enter Ticker for Research", "F").upper()
     period = st.selectbox("Chart Period", ["1mo", "6mo", "1y", "5y", "max"], index=2)
-    
     st.divider()
     
-    # Portfolio Analysis (15 Stocks)
+    # Portfolio Settings
     st.subheader("MAX 15 Stocks")
     default_tickers = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, GOOG, TSLA, AMZN, NVDA, META, BRK-B, V, JPM"
-    input_tickers = st.text_area("Portfolio Tickers (comma separated):", default_tickers)
+    input_tickers = st.text_area("Portfolio Tickers:", default_tickers)
     tickers = [t.strip().upper() for t in input_tickers.split(",")]
-    
-    st.divider()
-   
 
-# 3. Define the Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([" Overview", " Financials", " News", " Analysis", " Volatility"])
+# 4. EXECUTION
+if ticker_symbol:
+    ticker, info = get_stock_data(ticker_symbol)
+    
+    if info and 'longName' in info:
+        # Define the Tabs
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "News", "Analysis", "Volatility"])
+        
+        # --- TAB 1: OVERVIEW ---
+        with tab1:
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                st.header(info.get('longName', ticker_symbol))
+                st.metric("Current Price", f"${info.get('currentPrice', 'N/A')}")
+                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
+            with col2:
+                st.subheader("Performance")
+                history = ticker.history(period=period)
+                st.line_chart(history['Close'])
+        
+        # ... Rest of your tab code remains the same, 
+        # just make sure it's indented inside this 'if info:' block!
+    else:
+        st.error("Could not fetch data. You may be rate-limited by Yahoo. Try again in 1 hour.")
 
 # --- TAB 1: OVERVIEW ---
 if ticker_symbol:
