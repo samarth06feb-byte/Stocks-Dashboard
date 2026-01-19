@@ -108,7 +108,7 @@ if ticker_symbol:
         st.error("Data connection failed. Check your API key in Secrets.")
 
 # --- TAB 4: RISK ---
-with tab5:
+with tab4:
     if tickers_list:
         try:
             data = yf.download(tickers_list, period="1y")['Close']
