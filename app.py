@@ -5,8 +5,8 @@ import numpy as np
 from alpha_vantage.timeseries import TimeSeries
 
 # 1. Page Config
-st.set_page_config(layout="wide", page_title="Hermes & Jackson Terminal")
-st.title("🏛️ Hermes & Jackson | Research Terminal")
+st.set_page_config(layout="wide", page_title="Sam Terminal")
+st.title("Stock Research Terminal")
 
 # 2. DATA ENGINES (Cached)
 @st.cache_data(ttl=3600)
@@ -36,12 +36,12 @@ with st.sidebar:
     period = st.selectbox("Chart Period", ["1mo", "6mo", "1y", "5y", "max"], index=2)
     st.divider()
     st.subheader("Portfolio Watchlist")
-    default_list = "F, RACE, OSK, DOLE, CALM, AAPL, MSFT, TSLA"
+    default_list = "F"
     input_tickers = st.text_area("Portfolio Tickers:", default_list)
     tickers_list = [t.strip().upper() for t in input_tickers.split(",") if t.strip()]
 
 # 4. TABS
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "News", "Lynch Analysis", "Risk"])
+tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Financials", "Analysis", "Portfolio Risk"])
 
 # 5. EXECUTION
 if ticker_symbol:
@@ -82,13 +82,21 @@ if ticker_symbol:
             
             try:
                 st.subheader("Income Statement")
+try:
+    income = ticker_obj.income_stmt
+    # 1. Clean up the dates in the headers
+    income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
+    # 2. Apply professional formatting
+    st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
+except Exception as e:
+    st.error("Could not format Income Statement. Yahoo may be sending empty data.")
                 st.dataframe(ticker_obj.income_stmt.style.format(fmt), use_container_width=True)
                 st.subheader("Cash Flow")
                 st.dataframe(ticker_obj.cash_flow.style.format(fmt), use_container_width=True)
             except:
                 st.error("Financial statements are throttled by Yahoo. Please wait.")
 
-        # --- TAB 4: LYNCH ANALYSIS ---
+        # --- TAB 3: LYNCH ANALYSIS ---
         with tab4:
             st.subheader("Asset Categorization")
             if info:
@@ -103,7 +111,7 @@ if ticker_symbol:
     else:
         st.error("Data connection failed. Check your API key in Secrets.")
 
-# --- TAB 5: RISK ---
+# --- TAB 4: RISK ---
 with tab5:
     if tickers_list:
         try:
