@@ -81,17 +81,9 @@ if ticker_symbol:
             fmt = lambda x: "{:,.0f}".format(x) if isinstance(x, (int, float)) else x
             try:
                 st.subheader("Income Statement")
-                 
-                # 2. Clean the column headers (removes the '00:00:00' timestamp)
-                income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
-    
-                # 3. Use Pandas Styler to fix scientific notation and add commas
-                # This turns 143000000000 into 143,000,000,000
                 st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
 
-                # 2. Apply professional formatting
-                st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
-                st.dataframe(ticker_obj.income_stmt.style.format(fmt), use_container_width=True)
+                
                 st.subheader("Cash Flow")
                 st.dataframe(ticker_obj.cash_flow.style.format(fmt), use_container_width=True)
             except:
