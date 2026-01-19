@@ -80,7 +80,6 @@ if ticker_symbol:
             # Commas formatting
             fmt = lambda x: "{:,.0f}".format(x) if isinstance(x, (int, float)) else x
             
-               try:
                  # 1. Fetch the raw data
                   income = ticker_obj.income_stmt
     
