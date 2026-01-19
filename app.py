@@ -80,11 +80,24 @@ if ticker_symbol:
             # Commas formatting
             fmt = lambda x: "{:,.0f}".format(x) if isinstance(x, (int, float)) else x
             
-            try:
-                st.subheader("Income Statement")
-                income = ticker_obj.income_stmt
-                # 1. Clean up the dates in the headers
-                income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
+               st.subheader("Income Statement")
+
+try:
+    # 1. Fetch the raw data
+    income = ticker_obj.income_stmt
+    
+    # 2. Clean the column headers (removes the '00:00:00' timestamp)
+    income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
+    
+    # 3. Use Pandas Styler to fix scientific notation and add commas
+    # This turns 143000000000 into 143,000,000,000
+    st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
+
+except Exception as e:
+    st.error("Financial data unavailable. Yahoo is likely throttled.")
+              
+
+
                 # 2. Apply professional formatting
                 st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
                 st.dataframe(ticker_obj.income_stmt.style.format(fmt), use_container_width=True)
