@@ -90,7 +90,8 @@ if ticker_symbol:
                 st.dataframe(ticker_obj.income_stmt.style.format(fmt), use_container_width=True)
                 st.subheader("Cash Flow")
                 st.dataframe(ticker_obj.cash_flow.style.format(fmt), use_container_width=True)
-           
+            except:
+                    st.error("Financials currently unavailable.")
 
         # --- TAB 3: LYNCH ANALYSIS ---
         with tab3:
