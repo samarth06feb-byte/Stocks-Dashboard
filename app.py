@@ -81,11 +81,9 @@ if ticker_symbol:
             fmt = lambda x: "{:,.0f}".format(x) if isinstance(x, (int, float)) else x
             try:
                 st.subheader("Income Statement")
-                 # 1. Fetch the raw data
-                  income = ticker_obj.income_stmt
-    
+                 
                 # 2. Clean the column headers (removes the '00:00:00' timestamp)
-                  income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
+                income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
     
                 # 3. Use Pandas Styler to fix scientific notation and add commas
                 # This turns 143000000000 into 143,000,000,000
