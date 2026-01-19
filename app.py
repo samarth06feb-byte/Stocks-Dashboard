@@ -82,19 +82,15 @@ if ticker_symbol:
             
             try:
                 st.subheader("Income Statement")
-try:
-    income = ticker_obj.income_stmt
-    # 1. Clean up the dates in the headers
-    income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
-    # 2. Apply professional formatting
-    st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
-except Exception as e:
-    st.error("Could not format Income Statement. Yahoo may be sending empty data.")
+                income = ticker_obj.income_stmt
+                # 1. Clean up the dates in the headers
+                income.columns = [c.strftime('%Y-%m-%d') for c in income.columns]
+                # 2. Apply professional formatting
+                st.dataframe(income.style.format("{:,.0f}"), use_container_width=True)
                 st.dataframe(ticker_obj.income_stmt.style.format(fmt), use_container_width=True)
                 st.subheader("Cash Flow")
                 st.dataframe(ticker_obj.cash_flow.style.format(fmt), use_container_width=True)
-            except:
-                st.error("Financial statements are throttled by Yahoo. Please wait.")
+           
 
         # --- TAB 3: LYNCH ANALYSIS ---
         with tab4:
