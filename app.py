@@ -79,7 +79,8 @@ if ticker_symbol:
             st.header("Financial Statements")
             # Commas formatting
             fmt = lambda x: "{:,.0f}".format(x) if isinstance(x, (int, float)) else x
-            
+            try:
+                st.subheader("Income Statement")
                  # 1. Fetch the raw data
                   income = ticker_obj.income_stmt
     
