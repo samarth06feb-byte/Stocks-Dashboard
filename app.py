@@ -93,7 +93,7 @@ if ticker_symbol:
            
 
         # --- TAB 3: LYNCH ANALYSIS ---
-        with tab4:
+        with tab3:
             st.subheader("Asset Categorization")
             if info:
                 pe = info.get('forwardPE', 0)
