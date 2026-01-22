@@ -116,5 +116,21 @@ with tab4:
             cov_matrix = returns.cov() * 252
             portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
             portfolio_vol = np.sqrt(portfolio_variance) * 100
-        except:
-            st.warning("Bulk data throttled.")
+            col1, col2 = st.columns([1, 2])
+            
+            with col1:
+                st.subheader("Total Portfolio Risk")
+                st.metric("Annualized Volatility", f"{portfolio_vol:.2f}%")
+                st.write("---")
+                st.caption("Lower total volatility vs. average individual volatility proves the benefit of your diversification strategy.")
+
+            with col2:
+                st.subheader("Individual Asset Risk")
+                st.bar_chart(ind_vol)
+                
+            # Detailed Table
+            st.write("**Risk Breakdown by Ticker**")
+            st.dataframe(ind_vol.rename("Vol %").to_frame().style.background_gradient(cmap='RdYlGn_r'))
+
+        except Exception as e:
+            st.warning(f"Bulk risk calculation throttled or failed: {e}")
