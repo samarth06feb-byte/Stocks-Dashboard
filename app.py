@@ -37,7 +37,7 @@ with st.sidebar:
     st.divider()
     st.subheader("Portfolio Watchlist")
     default_list = "F"
-    input_tickers = st.text_area("Portfolio Tickers:", default_list)
+    input_tickers = st.text_area("Max 15 Tickers:", default_list)
     tickers_list = [t.strip().upper() for t in input_tickers.split(",") if t.strip()]
 
 # 4. TABS
@@ -111,5 +111,10 @@ with tab4:
             data = yf.download(tickers_list, period="1y")['Close']
             vol = data.pct_change().std() * np.sqrt(252) * 100
             st.bar_chart(vol)
+            ind_vol = returns.std() * np.sqrt(252) * 100
+            weights = np.array([1/len(tickers_list)] * len(tickers_list))
+            cov_matrix = returns.cov() * 252
+            portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+            portfolio_vol = np.sqrt(portfolio_variance) * 100
         except:
             st.warning("Bulk data throttled.")
