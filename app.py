@@ -41,7 +41,7 @@ with st.sidebar:
     tickers_list = [t.strip().upper() for t in input_tickers.split(",") if t.strip()]
 
 # 4. TABS
-tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Financials", "Analysis", "Portfolio Risk"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "Analysis", "Portfolio Volatility", "Portfolio Risk"])
 
 # 5. EXECUTION
 if ticker_symbol:
@@ -104,9 +104,52 @@ if ticker_symbol:
     else:
         st.error("Data connection failed. Check your API key in Secrets.")
 
-# --- TAB 4: RISK ---     
-with tab4:
-    if tickers_list:
+      # --- TAB 4: Volatility ---
+      with tab4:
+      if tickers_list:
+        try:
+            # 1. Fetch historical data (using 1 year of data for Lynch-style analysis)
+            data = yf.download(tickers_list, period="1y")['Close']
+            
+            # 2. Calculate Daily Returns
+            returns = data.pct_change().dropna()
+            
+            # 3. Individual Stock Volatility (Annualized)
+            # Standard Deviation * sqrt(252 trading days)
+            ind_vol = returns.std() * np.sqrt(252) * 100
+            
+            # 4. Total Portfolio Volatility (Matrix Algebra)
+            # Assuming equal weights for all stocks in Hermes & Jackson holdings
+            weights = np.array([1/len(tickers_list)] * len(tickers_list))
+            cov_matrix = returns.cov() * 252 # Annualized Covariance
+            
+            # Formula: sqrt(Weights.T * Cov * Weights)
+            portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+            portfolio_vol = np.sqrt(portfolio_variance) * 100
+
+            # 5. UI DISPLAY
+            col1, col2 = st.columns([1, 2])
+            
+            with col1:
+                st.subheader("Total Portfolio Risk")
+                st.metric("Annualized Volatility", f"{portfolio_vol:.2f}%")
+                st.write("---")
+                st.caption("Lower total volatility vs. average individual volatility proves the benefit of your diversification strategy.")
+
+            with col2:
+                st.subheader("Individual Asset Risk")
+                st.bar_chart(ind_vol)
+                
+            # Detailed Table
+            st.write("**Risk Breakdown by Ticker**")
+            st.dataframe(ind_vol.rename("Vol %").to_frame().style.background_gradient(cmap='RdYlGn_r'))
+
+        except Exception as e:
+            st.warning(f"Bulk risk calculation throttled or failed: {e}")
+
+      # --- TAB 5: RISK ---
+      with tab4:
+      if tickers_list:
         # INITIALIZE VARIABLES (The Safety Net)
         returns = None
         ind_vol = None
@@ -141,49 +184,5 @@ with tab4:
                 st.bar_chart(ind_vol)
         else:
             st.info("Risk metrics will appear once Yahoo Finance connection is restored.")
-            # 1. Fetch data
-            data = yf.download(tickers_list, period="1y")['Close']
-            returns = data.pct_change().dropna()
             
-            # 2. Risk-Free Rate Assumption (e.g., 4% Annual)
-            rf_annual = 0.04
-            rf_daily = rf_annual / 252
-            
-            # 3. Individual Calcs
-            # Annualized Mean Return
-            ind_returns = returns.mean() * 252
-            # Annualized Volatility
-            ind_vol = returns.std() * np.sqrt(252)
-            # Sharpe Ratio
-            ind_sharpe = (ind_returns - rf_annual) / ind_vol
-
-            # 4. Portfolio Calcs (Equal Weighted)
-            weights = np.array([1/len(tickers_list)] * len(tickers_list))
-            port_return = np.dot(weights, ind_returns)
-            port_vol = np.sqrt(np.dot(weights.T, np.dot(returns.cov() * 252, weights)))
-            port_sharpe = (port_return - rf_annual) / port_vol
-
-            # 5. UI DISPLAY
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Portfolio Sharpe Ratio", f"{port_sharpe:.2f}")
-                st.caption(" > 1.0 is Good | > 2.0 is Institutional Grade")
-            with col2:
-                st.metric("Portfolio Return (1Y)", f"{port_return*100:.1f}%")
-
-            st.divider()
-            
-            # 6. CHART: Risk vs Reward
-            st.subheader("Individual Asset Sharpe Ratios")
-            st.bar_chart(ind_sharpe)
-            
-            # 7. ANALYST TABLE
-            risk_df = pd.DataFrame({
-                "Return (%)": ind_returns * 100,
-                "Volatility (%)": ind_vol * 100,
-                "Sharpe Ratio": ind_sharpe
-            })
-            st.dataframe(risk_df.style.format("{:.2f}").background_gradient(subset=["Sharpe Ratio"], cmap="RdYlGn"))
-
-        except Exception as e:
-            st.error(f"Risk calculation failed: {e}")
+           
