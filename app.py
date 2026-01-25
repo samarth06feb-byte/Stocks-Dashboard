@@ -107,37 +107,50 @@ if ticker_symbol:
 # --- TAB 4: RISK ---
 with tab4:
     if tickers_list:
-        # INITIALIZE VARIABLES (The Safety Net)
-        returns = None
-        ind_vol = None
-        portfolio_vol = None
-
         try:
             # 1. Fetch data
             data = yf.download(tickers_list, period="1y")['Close']
+            returns = data.pct_change().dropna()
             
-            # 2. Calculate Returns (If this fails, 'returns' remains None)
-            if not data.empty:
-                returns = data.pct_change().dropna()
-                
-                # 3. Individual Volatility
-                ind_vol = returns.std() * np.sqrt(252) * 100
-                
-                # 4. Portfolio Volatility (Matrix Math)
-                weights = np.array([1/len(tickers_list)] * len(tickers_list))
-                cov_matrix = returns.cov() * 252
-                portfolio_vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * 100
+            # 2. Risk-Free Rate Assumption (e.g., 4% Annual)
+            rf_annual = 0.04
+            rf_daily = rf_annual / 252
+            
+            # 3. Individual Calcs
+            # Annualized Mean Return
+            ind_returns = returns.mean() * 252
+            # Annualized Volatility
+            ind_vol = returns.std() * np.sqrt(252)
+            # Sharpe Ratio
+            ind_sharpe = (ind_returns - rf_annual) / ind_vol
 
-        except Exception as e:
-            st.error(f"Throttled: Could not calculate risk for {len(tickers_list)} assets.")
+            # 4. Portfolio Calcs (Equal Weighted)
+            weights = np.array([1/len(tickers_list)] * len(tickers_list))
+            port_return = np.dot(weights, ind_returns)
+            port_vol = np.sqrt(np.dot(weights.T, np.dot(returns.cov() * 252, weights)))
+            port_sharpe = (port_return - rf_annual) / port_vol
 
-        # 5. CONDITIONAL DISPLAY (Check if variables exist before showing)
-        if returns is not None:
+            # 5. UI DISPLAY
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Total Portfolio Risk", f"{portfolio_vol:.2f}%")
+                st.metric("Portfolio Sharpe Ratio", f"{port_sharpe:.2f}")
+                st.caption(" > 1.0 is Good | > 2.0 is Institutional Grade")
             with col2:
-                st.write("**Individual Asset Risk**")
-                st.bar_chart(ind_vol)
-        else:
-            st.info("Risk metrics will appear once Yahoo Finance connection is restored.")
+                st.metric("Portfolio Return (1Y)", f"{port_return*100:.1f}%")
+
+            st.divider()
+            
+            # 6. CHART: Risk vs Reward
+            st.subheader("Individual Asset Sharpe Ratios")
+            st.bar_chart(ind_sharpe)
+            
+            # 7. ANALYST TABLE
+            risk_df = pd.DataFrame({
+                "Return (%)": ind_returns * 100,
+                "Volatility (%)": ind_vol * 100,
+                "Sharpe Ratio": ind_sharpe
+            })
+            st.dataframe(risk_df.style.format("{:.2f}").background_gradient(subset=["Sharpe Ratio"], cmap="RdYlGn"))
+
+        except Exception as e:
+            st.error(f"Risk calculation failed: {e}")
