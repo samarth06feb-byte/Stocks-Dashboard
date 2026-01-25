@@ -108,6 +108,43 @@ if ticker_symbol:
 with tab4:
     if tickers_list:
         try:
+            # --- TAB 4: RISK ---
+with tab4:
+    if tickers_list:
+        # INITIALIZE VARIABLES (The Safety Net)
+        returns = None
+        ind_vol = None
+        portfolio_vol = None
+
+        try:
+            # 1. Fetch data
+            data = yf.download(tickers_list, period="1y")['Close']
+            
+            # 2. Calculate Returns (If this fails, 'returns' remains None)
+            if not data.empty:
+                returns = data.pct_change().dropna()
+                
+                # 3. Individual Volatility
+                ind_vol = returns.std() * np.sqrt(252) * 100
+                
+                # 4. Portfolio Volatility (Matrix Math)
+                weights = np.array([1/len(tickers_list)] * len(tickers_list))
+                cov_matrix = returns.cov() * 252
+                portfolio_vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * 100
+
+        except Exception as e:
+            st.error(f"Throttled: Could not calculate risk for {len(tickers_list)} assets.")
+
+        # 5. CONDITIONAL DISPLAY (Check if variables exist before showing)
+        if returns is not None:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Total Portfolio Risk", f"{portfolio_vol:.2f}%")
+            with col2:
+                st.write("**Individual Asset Risk**")
+                st.bar_chart(ind_vol)
+        else:
+            st.info("Risk metrics will appear once Yahoo Finance connection is restored.")
             # 1. Fetch data
             data = yf.download(tickers_list, period="1y")['Close']
             returns = data.pct_change().dropna()
