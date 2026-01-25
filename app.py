@@ -104,9 +104,9 @@ if ticker_symbol:
     else:
         st.error("Data connection failed. Check your API key in Secrets.")
 
-      # --- TAB 4: Volatility ---
-      with tab4:
-      if tickers_list:
+# --- TAB 4: Volatility ---
+with tab4:
+    if tickers_list:
         try:
             # 1. Fetch historical data (using 1 year of data for Lynch-style analysis)
             data = yf.download(tickers_list, period="1y")['Close']
