@@ -104,11 +104,7 @@ if ticker_symbol:
     else:
         st.error("Data connection failed. Check your API key in Secrets.")
 
-# --- TAB 4: RISK ---
-with tab4:
-    if tickers_list:
-        try:
-            # --- TAB 4: RISK ---
+# --- TAB 4: RISK ---     
 with tab4:
     if tickers_list:
         # INITIALIZE VARIABLES (The Safety Net)
