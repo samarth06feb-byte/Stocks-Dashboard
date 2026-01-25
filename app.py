@@ -147,8 +147,8 @@ with tab4:
         except Exception as e:
             st.warning(f"Bulk risk calculation throttled or failed: {e}")
 
-      # --- TAB 5: RISK ---
-      with tab4:
+# --- TAB 5: RISK ---
+    with tab5:
       if tickers_list:
         # INITIALIZE VARIABLES (The Safety Net)
         returns = None
