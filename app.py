@@ -107,30 +107,37 @@ if ticker_symbol:
 # --- TAB 4: RISK ---
 with tab4:
     if tickers_list:
-        try:
-            data = yf.download(tickers_list, period="1y")['Close']
-            vol = data.pct_change().std() * np.sqrt(252) * 100
-            st.bar_chart(vol)
-            ind_vol = returns.std() * np.sqrt(252) * 100
-            weights = np.array([1/len(tickers_list)] * len(tickers_list))
-            cov_matrix = returns.cov() * 252
-            portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
-            portfolio_vol = np.sqrt(portfolio_variance) * 100
-            col1, col2 = st.columns([1, 2])
-            
-            with col1:
-                st.subheader("Total Portfolio Risk")
-                st.metric("Annualized Volatility", f"{portfolio_vol:.2f}%")
-                st.write("---")
-                st.caption("Lower total volatility vs. average individual volatility proves the benefit of your diversification strategy.")
+        # INITIALIZE VARIABLES (The Safety Net)
+        returns = None
+        ind_vol = None
+        portfolio_vol = None
 
-            with col2:
-                st.subheader("Individual Asset Risk")
-                st.bar_chart(ind_vol)
+        try:
+            # 1. Fetch data
+            data = yf.download(tickers_list, period="1y")['Close']
+            
+            # 2. Calculate Returns (If this fails, 'returns' remains None)
+            if not data.empty:
+                returns = data.pct_change().dropna()
                 
-            # Detailed Table
-            st.write("**Risk Breakdown by Ticker**")
-            st.dataframe(ind_vol.rename("Vol %").to_frame().style.background_gradient(cmap='RdYlGn_r'))
+                # 3. Individual Volatility
+                ind_vol = returns.std() * np.sqrt(252) * 100
+                
+                # 4. Portfolio Volatility (Matrix Math)
+                weights = np.array([1/len(tickers_list)] * len(tickers_list))
+                cov_matrix = returns.cov() * 252
+                portfolio_vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * 100
 
         except Exception as e:
-            st.warning(f"Bulk risk calculation throttled or failed: {e}")
+            st.error(f"Throttled: Could not calculate risk for {len(tickers_list)} assets.")
+
+        # 5. CONDITIONAL DISPLAY (Check if variables exist before showing)
+        if returns is not None:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Total Portfolio Risk", f"{portfolio_vol:.2f}%")
+            with col2:
+                st.write("**Individual Asset Risk**")
+                st.bar_chart(ind_vol)
+        else:
+            st.info("Risk metrics will appear once Yahoo Finance connection is restored.")
